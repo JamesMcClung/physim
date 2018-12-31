@@ -33,6 +33,8 @@ The single- and double-slit experiments were revolutionary demonstrations of the
 
 ![](doubleSlitResult.gif)
 
-Although the particles look the same, there is a "wall" of fixed particles about halfway between the front and back ends.
+Although the particles look the same, there is a "wall" of fixed particles about halfway between the front and back ends. If you look closely, you can even see the slit.
 
 ![](singleSlitWall.gif)
+
+Admittedly, my results do not match reality. This may be due to how I "measure" the waves, or perhaps wave dynamics are more complex than a small array of connected springs.
