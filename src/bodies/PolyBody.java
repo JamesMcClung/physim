@@ -3,6 +3,7 @@ package bodies;
 import graphics.GraphicsInterface;
 import shapes.Orientation;
 import shapes.Polyhedron;
+import vector.CVector;
 import vector.Matrix3x3;
 import vector.Quaternion;
 import vector.Vector;
@@ -18,6 +19,7 @@ public class PolyBody extends RigidBody {
 	
 	@Override
 	public void renderAt(GraphicsInterface g, Vector position) {
+		g.fillPolyhedron(body, position, new CVector(1,0,0));
 		g.drawPolyhedronOutline(body, position);
 	}
 	

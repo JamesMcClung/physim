@@ -12,11 +12,11 @@ public class Electrostatic implements Force {
 	/**
 	 * Commonly written as ε0. Units are C^2/N/m^2. 
 	 */
-	public static final double ELECTRIC_CONSTANT = 8.854187817E-12; 
+	public static final double PERMITTIVITY_CONSTANT = 8.854187817E-12; 
 	/**
 	 * Field constant for electric field. Units are N*m^2/C^2.
 	 */
-	public static final double FIELD_CONSTANT = 1/(4*Math.PI*ELECTRIC_CONSTANT);
+	public static final double FIELD_CONSTANT = 1/(4*Math.PI*PERMITTIVITY_CONSTANT);
 	
 	/**
 	 * Creates a new electric field. Default strength is {@link #FIELD_CONSTANT}
@@ -24,6 +24,10 @@ public class Electrostatic implements Force {
 	 */
 	public Electrostatic() {
 		this(FIELD_CONSTANT, null);
+	}
+	
+	public Electrostatic(VectorField backgroundField) {
+		this(0, backgroundField);
 	}
 	
 	/**

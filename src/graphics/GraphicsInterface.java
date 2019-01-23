@@ -4,11 +4,14 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.util.Objects;
 import java.util.function.Function;
 
 import shapes.Frame;
+import shapes.Polyhedron;
+import shapes.Triangle;
 import util.Angle;
 import util.DistanceUnit;
 import vector.CVector;
@@ -245,6 +248,91 @@ public class GraphicsInterface {
 		for (var edge : p.edges()) {
 			drawLine(edge.v1.duplicate().translate(position), edge.v2.duplicate().translate(position));
 		}
+	}
+	
+	/**
+	 * Fills in the polyhedron's faces. The color of each face is determined by the intensity of light at that angle.
+	 * The color is based on the current color of the graphics object, and this method ends by setting the color back to normal.
+	 * @param p the polyhedron
+	 * @param position the center of the polyhedron, in absolute coords
+	 * @param light the direction and magnitude of the light (let mag be 1 for natural brightness, 0 for darkness) 
+	 */
+	public void fillPolyhedron(Polyhedron p, Vector position, Vector light) {
+		Color c = g.getColor();
+		for (var face : p.faces()) {
+			fillFace(face, position, light, c);
+		}
+		g.setColor(c);
+	}
+	
+	/**
+	 * Fills a single face of a polyhedron.
+	 * @param t the face
+	 * @param position teh center of the polyhedron
+	 * @param light light direction and magnitude
+	 * @param baseColor natural color of the face
+	 */
+	private void fillFace(Triangle t, Vector position, Vector light, Color baseColor) {
+		Color c = getColorOfFace(t, light, baseColor);
+		if (c == Color.BLACK)
+			return;
+		
+		var polygon = getPolygon(t, position);
+		if (polygon != null) {
+			g.setColor(c);
+			g.fillPolygon(polygon);
+		}
+	}
+	
+	/**
+	 * Turns a polyhedron face into an actual Polygon object describing its on-screen appearance.
+	 * @param t the face
+	 * @param position the center of the polyhedron
+	 * @return the polygon
+	 */
+	private Polygon getPolygon(Triangle t, Vector position) {
+		final int npts = 3;
+		int[] xpts = new int[npts];
+		int[] ypts = new int[npts];
+		int i = 0;
+		for (var vertex : t.getVertices()) {
+			Point p = getPositionOnScreen(getRelativePosition(new CVector(position).translate(vertex)));
+			if (p == null)
+				return null;
+			xpts[i] = p.x;
+			ypts[i] = p.y;
+			i++;
+		}
+		return new Polygon(xpts, ypts, npts);
+	}
+	
+	/**
+	 * Calculates the color of a polyhedron face based on lighting and angle.
+	 * @param face the face
+	 * @param light the lighting direction and magnitude (mag 1 = natural brightness, mag 0 = dark)
+	 * @param baseColor the natural color of the face
+	 * @return the color; if the face is being lit from the back, this will always be black
+	 */
+	private Color getColorOfFace(Triangle face, Vector light, Color baseColor) {
+		if (light == null)
+			return baseColor;
+		
+		int r = baseColor.getRed();
+		int g = baseColor.getGreen();
+		int b = baseColor.getBlue();
+		
+		final int scale = 100;
+		var areaVec = face.getAreaVector();
+		int brightness = (int) (scale * areaVec.dot(light) / areaVec.magnitude());
+		
+		r = r * brightness / scale;
+		g = g * brightness / scale;
+		b = b * brightness / scale;
+		
+		if (r < 0 || g < 0 || b < 0)
+			return Color.BLACK;
+		
+		return new Color(r, g, b);
 	}
 
 	public DistanceUnit getRecommendedUnit(int lengthInPixels) {

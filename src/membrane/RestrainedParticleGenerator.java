@@ -68,5 +68,12 @@ public class RestrainedParticleGenerator implements Function<Point, RestrainedPa
 	protected Vector getParticleVelocity(Point p) {
 		return new CVector(dof).scale(ivdf.apply(p));
 	}
+	
+	/**
+	 * @return a duplicate of the dof
+	 */
+	protected Vector getDOF() {
+		return new CVector(dof);
+	}
 
 }

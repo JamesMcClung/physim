@@ -32,22 +32,26 @@ public class Bodies {
 
 	public static Particle getElectron(Vector position, Vector velocity) {
 		Particle electron = new Particle(MASS_ELECTRON, -E, position, velocity);
+		electron.setName("Electron");
 		return electron;
 	}
 	
 	public static Body getProton(Vector position, Vector velocity) {
 		SphereBody proton = new SphereBody(MASS_PROTON, RADIUS_PROTON, position, velocity);
+		proton.setName("Proton");
 		proton.setCharge(E);
 		return proton;
 	}
 	
 	public static Body getNeutron(Vector position, Vector velocity) {
 		SphereBody neutron = new SphereBody(MASS_NEUTRON, RADIUS_NEUTRON, position, velocity);
+		neutron.setName("Neutron");
 		return neutron;
 	}
 	
 	public static Body getNeutrino(Vector position, Vector velocity) {
 		Particle neutrino = new Particle(MASS_NEUTRINO, 0, position, velocity);
+		neutrino.setName("Neutrino");
 		return neutrino;
 	}
 	

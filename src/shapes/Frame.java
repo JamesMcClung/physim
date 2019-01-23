@@ -92,9 +92,9 @@ public class Frame {
 		this(new Orientation(), faces);
 	}
 	
-	private Orientation orientation;
-	private HashSet<Edge> edges = new HashSet<>();
-	private HashSet<Vector> vertices = new HashSet<>();
+	private final Orientation orientation;
+	private final Set<Edge> edges = new HashSet<>();
+	private final Set<Vector> vertices = new HashSet<>();
 	
 	/**
 	 * Rotates the polyhedron and its orientation by q.
@@ -123,8 +123,7 @@ public class Frame {
 	public Set<Vector> vertices() {
 		return vertices;
 	}
-	
-	
+
 	/**
 	 * Returns a duplicate of the orientation's specified axis.
 	 * @param axis the specified axis

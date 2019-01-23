@@ -5,13 +5,13 @@ import java.util.function.Function;
 
 import bodies.Particle;
 import sim.Spacetime;
-import sim.System;
+import sim.PSystem;
 import tethers.IdealRubberBand;
 import tethers.Tether;
 import vector.CVector;
 import vector.Vector;
 
-public class RectangularMesh implements System {
+public class RectangularMesh implements PSystem {
 	
 	public RectangularMesh(int w, int h, Vector pos, Vector delX, Vector delY, Function<Point, Double> massDistributionFunction, Function<Point, Double> horizontalStrengthDistributionFunction, Function<Point, Double> verticalStrengthDistributionFunction) {
 		particles = new Particle[w][h];

@@ -38,7 +38,7 @@ public class RestrainedParticle extends Particle {
 	/**
 	 * Allowable degrees of freedom. All unit vectors.
 	 */
-	private final Vector[] dof;
+	protected final Vector[] dof;
 	private Function<Vector, Color> gradient = null;
 	
 	@Override

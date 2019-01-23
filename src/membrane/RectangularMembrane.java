@@ -4,12 +4,14 @@ import static vector.CVector.vec;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 import bodies.FixedPoint;
 import forces.Force;
 import sim.Spacetime;
-import sim.System;
+import sim.PSystem;
 import vector.CVector;
 import vector.Vector;
 
@@ -23,9 +25,9 @@ import vector.Vector;
  * @author James McClung
  *
  */
-public class RectangularMembrane implements System, Force {
+public class RectangularMembrane implements PSystem, Force {
 
-	public static final int DRAW_OPTIMIZATION_THRESHOLD = 25;
+//	public static final int DRAW_OPTIMIZATION_THRESHOLD = 25;
 
 	/**
 	 * Creates a new rectangular membrane.
@@ -43,7 +45,9 @@ public class RectangularMembrane implements System, Force {
 	 * @see #generateGradient(ColorGradient)
 	 */
 	public RectangularMembrane(int w, int h, Vector pos, Vector delX, Vector delY, RestrainedParticleGenerator pdf,
-			Function<Double, Double> force) {
+			Function<Double, Double> force, boolean fixedEdges) {
+		this.fixedEdges = fixedEdges;
+		
 		width = w;
 		height = h;
 		position = new CVector(pos);
@@ -68,7 +72,7 @@ public class RectangularMembrane implements System, Force {
 			boolean fixedEdges) {
 		this(w, h, pos, delX, delY,
 				new RestrainedParticleGenerator((p) -> particleMass, (p) -> 0d, (p) -> 0d, (p) -> 0d),
-				(d) -> -strength * d);
+				(d) -> -strength * d, fixedEdges);
 	}
 
 	public final int width, height;
@@ -171,9 +175,14 @@ public class RectangularMembrane implements System, Force {
 				// reset the value
 				meanRelativeDisplacements[i][j] = 0;
 
-				// displacement relative to left or right edge
-				if (i == 0 || i == width - 1) {
-					if (fixedEdges)
+				if (fixedEdges) {
+					
+					// displacement relative to left or right edge
+					if (i == 0 || i == width - 1)
+						meanRelativeDisplacements[i][j] += absoluteDisplacements[i][j] - posDisplacement;
+					
+					// displacement relative to top or bottom
+					if (j == 0 || j == height - 1)
 						meanRelativeDisplacements[i][j] += absoluteDisplacements[i][j] - posDisplacement;
 				}
 
@@ -182,12 +191,6 @@ public class RectangularMembrane implements System, Force {
 					relD = absoluteDisplacements[i][j] - absoluteDisplacements[i - 1][j];
 					meanRelativeDisplacements[i][j] += relD;
 					meanRelativeDisplacements[i - 1][j] -= relD;
-				}
-
-				// displacement relative to top or bottom
-				if (j == 0 || j == height - 1) {
-					if (fixedEdges)
-						meanRelativeDisplacements[i][j] += absoluteDisplacements[i][j] - posDisplacement;
 				}
 
 				// displacement relative to upper neighbor
@@ -201,11 +204,11 @@ public class RectangularMembrane implements System, Force {
 
 		// normalize relative displacements (set them to the average displacement
 		// instead of total displacement)
-		if (fixedEdges)
+		if (fixedEdges) {
 			for (int i = 0; i < width; i++)
 				for (int j = 0; j < height; j++)
 					meanRelativeDisplacements[i][j] /= 4;
-		else {
+		} else {
 			int nNeighbors;
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
@@ -248,60 +251,62 @@ public class RectangularMembrane implements System, Force {
 	}
 
 	public static class Presets {
-		public static RectangularMembrane getSingleSlitExperiment() {
-			final int width = 100, height = 50;
-
-			final int wallY = height / 2;
-			final int holeX = width / 2;
-
-			final int sourceX = width / 2;
-			final int sourceY = 0;
-			final double sourceMag = 5;
-
-			RestrainedParticleGenerator generator = new RestrainedParticleGenerator((p) -> 1d, (p) -> 0d,
-					(p) -> p.x == sourceX && p.y == sourceY ? sourceMag : 0d, (p) -> 0d) {
-				@Override
-				public RestrainedParticle apply(Point p) {
-					if (p.y == wallY && p.x != holeX)
-						return new FixedPoint(1, getParticlePosition(p), getParticleVelocity(p));
-					return super.apply(p);
-				}
-			};
-
-			Function<Double, Double> force = (d) -> -100 * d;
-
-			var mem = new RectangularMembrane(width, height, null, vec(.01, 0, 0), vec(0, 0, .01), generator, force);
-			mem.setFixedEdges(true);
-			mem.generateGradient(Color.RED, Color.GREEN, .1);
-
-			return mem;
-		}
 
 		public static RectangularMembrane getDoubleSlitExperiment() {
-			final int width = 100, height = 50;
+			return getSlitExperiment(2, 2);
+		}
 
-			final int wallY = height / 2;
-			final int holeX1 = width / 2 - 1;
-			final int holeX2 = width / 2 + 1;
+		/**
+		 * Creates a membrane with a slitted wall, an initial ripple, and displacement
+		 * detectors.
+		 * 
+		 * @param nSlits      the number of slits in the wall
+		 * @param slitSpacing the number of wall particles between slits
+		 * @return the membrane
+		 */
+		public static RectangularMembrane getSlitExperiment(int nSlits, int slitSpacing) {
+			final int width = 200, length = 50;
 
-			final int sourceX = width / 2;
+			final int wallY = length * 3 / 4;
+			final int holeX = width / 2;
+
 			final int sourceY = 0;
-			final double sourceMag = 5;
+			final double sourceMag = 2;
+
+			final int measureY = length - 1;
+
+			final List<Integer> slitXs = new ArrayList<>(nSlits);
+			final boolean evenNSlits = nSlits % 2 == 0;
+			int x1 = evenNSlits ? (slitSpacing + 1) / 2 : 0;
+			int x2 = (slitSpacing % 2 == 0 ? -1 : 0) - x1;
+			for (int i = 0; i < nSlits; i++, x1 += slitSpacing, x2 -= slitSpacing) {
+				slitXs.add(holeX + x1);
+				if (x1 != 0) {
+					slitXs.add(holeX + x2);
+					i++;
+				}
+			}
 
 			RestrainedParticleGenerator generator = new RestrainedParticleGenerator((p) -> 1d, (p) -> 0d,
-					(p) -> p.x == sourceX && p.y == sourceY ? sourceMag : 0d, (p) -> 0d) {
+					(p) -> p.y == sourceY ? sourceMag : 0d, (p) -> 0d) {
 				@Override
 				public RestrainedParticle apply(Point p) {
-					if (p.y == wallY && p.x != holeX1 && p.x != holeX2)
+					if (p.y == wallY && !slitXs.contains(p.x))
 						return new FixedPoint(1, getParticlePosition(p), getParticleVelocity(p));
+					else if (p.y == measureY)
+						return new MeasuringParticle(mdf.apply(p), cdf.apply(p), getParticlePosition(p),
+								getParticleVelocity(p), getDOF());
 					return super.apply(p);
 				}
 			};
 
-			Function<Double, Double> force = (d) -> -100 * d;
+			final double forceStrength = 100;
+			Function<Double, Double> force = (d) -> -forceStrength * d;
 
-			var mem = new RectangularMembrane(width, height, null, vec(.01, 0, 0), vec(0, 0, .01), generator, force);
-			mem.setFixedEdges(true);
+			final double spacing = 1d / width;
+
+			var mem = new RectangularMembrane(width, length, null, vec(spacing, 0, 0), vec(0, 0, spacing), generator,
+					force, false);
 			mem.generateGradient(Color.RED, Color.GREEN, .1);
 
 			return mem;

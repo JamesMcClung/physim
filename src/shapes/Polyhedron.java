@@ -55,6 +55,10 @@ public class Polyhedron extends Frame {
 		return sum/2;
 	}
 	
+	public Set<Triangle> faces() {
+		return faces;
+	}
+	
 	// for testing purposes
 //	public static void main(String[] args) {
 //		Vector apex = new CVector(0,1,0);

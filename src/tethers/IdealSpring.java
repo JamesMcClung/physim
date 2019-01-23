@@ -2,7 +2,7 @@ package tethers;
 
 import java.awt.Color;
 
-import bodies.Particle;
+import bodies.Body;
 import graphics.GraphicsInterface;
 import sim.Spacetime;
 import vector.CVector;
@@ -10,13 +10,13 @@ import vector.Vector;
 
 public class IdealSpring extends Tether {
 
-	public IdealSpring(double stiffness, Particle p1, Particle p2, double length) {
+	public IdealSpring(double stiffness, Body p1, Body p2, double length) {
 		fasten(p1, p2);
 		setLength(length);
 		k = stiffness;
 	}
 	
-	public IdealSpring(double stiffness, Particle p1, Particle p2) {
+	public IdealSpring(double stiffness, Body p1, Body p2) {
 		this(stiffness, p1, p2, Vector.distance(p1.position(), p2.position()));
 	}
 	

@@ -1,10 +1,7 @@
 package graphics;
 
-import static util.MiscUtil.square;
-
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -20,7 +17,6 @@ import bodies.Body;
 import bodies.Controllable;
 import bodies.Particle;
 import graphics_util.Button;
-import graphics_util.CircularPane;
 import graphics_util.DynamicTextLabel;
 import graphics_util.HUD;
 import graphics_util.Label;
@@ -32,7 +28,6 @@ import rocketry.Rocket;
 import shapes.Orientation;
 import sim.Spacetime;
 import util.CircularLinkedList;
-import util.DistanceUnit;
 import util.MiscUtil;
 import util.ValAsStr;
 import vector.CVector;
@@ -54,9 +49,8 @@ public class STPanel extends JPanel {
 		
 		gps = new GPS(GPS.PADDING, GPS.PADDING + Toolbar.TOOLBAR_HEIGHT);
 		pv = new ParticleViewer(Pane.PADDING, gps.getY() + gps.getHeight() + Pane.PADDING);
-		tm = new TapeMeasure(300, 300, 400, 300);
 		toolbar = new Toolbar();
-		hud = new HUD(gps, pv, tm.label, tm.knob1, tm.knob2, toolbar);
+		hud = new HUD(gps, pv, toolbar);
 		
 		setSecondsPerMillisecond(1); // initial s/s
 		
@@ -110,7 +104,6 @@ public class STPanel extends JPanel {
 	// GUI and input stuff
 	private GPS gps;
 	private ParticleViewer pv;
-	private TapeMeasure tm;
 	private Toolbar toolbar;
 	private HUD hud;
 	public final MouseHandler mouseHandler = new MouseHandler();
@@ -308,7 +301,7 @@ public class STPanel extends JPanel {
 			// label to show orientation of camera
 			gpsGI = new GraphicsInterface(widthLabel, widthLabel, xHUD, yHUD, gpsCam);
 			gpsGI.setProjectionType(GraphicsInterface.ORTHOGRAPHIC);
-			gpsGI.setOrthographicPPM(50);
+			gpsGI.setOrthographicPPM(70);
 			Label orientationLabel = new Label(widthLabel, widthLabel) {
 				public void render(Graphics g, int x, int y) {
 					gpsGI.setGraphics(g);
@@ -534,86 +527,6 @@ public class STPanel extends JPanel {
 		}
 	}
 	
-	@Deprecated
-	private class TapeMeasure {
-		private static final int KNOB_RADIUS = 8;
-		
-		public TapeMeasure(int x1, int y1, int x2, int y2) {
-			knob1 = new CircularPane(x1, y1, KNOB_RADIUS) {
-				@Override
-				public void setIsHidden(boolean b) {
-					super.setIsHidden(b);
-					knob2.setIsHidden(b);
-					label.setIsHidden(b);
-				}
-			};
-			
-			knob2 = new CircularPane(x2, y2, KNOB_RADIUS);
-			
-			label = new Pane(-1, -1, 0, Pane.LINE_HEIGHT) {
-				{padding = 2;}
-				@Override
-				public void render(Graphics g) {
-					if (isHidden()) return;
-					
-					g.setColor(Pane.colorBackground);
-					int x1 = knob1.getXCenter(),
-							y1 = knob1.getYCenter(),
-							x2 = knob2.getXCenter(),
-							y2 = knob2.getYCenter();
-					g.drawLine(x1, y1, x2, y2);
-					
-					double distance = Math.sqrt(square(x1-x2) + square(y1-y2)) / gi.getPPM(0);
-					DistanceUnit unit = DistanceUnit.getUnit(distance);
-					String text = String.format("%.1f %s", distance/unit.meterEquivalent, unit.abbreviation);
-					
-					FontMetrics f = g.getFontMetrics();
-					setWidth(f.stringWidth(text) + 2*padding);
-					if (heightPending)
-						setHeight(f.getAscent() - f.getDescent() + 2*padding);
-					
-					int x = (x1+x2 - getWidth())/2, y = (y1+y2)/2 - getHeight();
-					super.setX(x);
-					lastX = x;
-					super.setY(y);
-					lastY = y;
-					
-					g.fillRoundRect(getX(), getY(), getWidth(), getHeight(), 2*padding, 2*padding);
-					g.setColor(Pane.colorText);
-					g.drawString(text, x+padding, y+getHeight()-padding);
-				}
-				
-				int lastX = getX(), lastY = getY();
-				
-				@Override
-				public void setX(int x) {
-					super.setX(x);
-					knob1.setX(knob1.getX() + x - lastX);
-					knob2.setX(knob2.getX() + x - lastX);
-					lastX = x;
-				}
-				
-				@Override
-				public void setY(int y) {
-					super.setY(y);
-					knob1.setY(knob1.getY() + y - lastY);
-					knob2.setY(knob2.getY() + y - lastY);
-					lastY = y;
-				}
-			};
-			
-			knob1.setIsHidden(true);
-		}
-		
-		private CircularPane knob1, knob2;
-		private Pane label;
-		boolean heightPending = true;
-		
-		public void toggleVisibility() {
-			knob1.toggleVisibility();
-		}
-	}
-	
 	private class Toolbar extends Pane {
 		public static final int BUTTON_WIDTH = 80, BUTTON_HEIGHT = 40;
 		public static final int TOOLBAR_WIDTH = WIDTH_PANEL, TOOLBAR_HEIGHT = BUTTON_HEIGHT + 2*PADDING;
@@ -625,7 +538,6 @@ public class STPanel extends JPanel {
 			add(-1,
 //					new Button(BUTTON_WIDTH, BUTTON_HEIGHT, "Match Scale", () -> setZoom(GraphicsInterface.PIXELS_PER_METER)),
 					new Button(BUTTON_WIDTH, BUTTON_HEIGHT, "Toggle GPS", gps::toggleVisibility),
-					new Button(BUTTON_WIDTH, BUTTON_HEIGHT, "Toggle Ruler", tm::toggleVisibility),
 					new Button(BUTTON_WIDTH, BUTTON_HEIGHT, "Toggle Trace", STPanel.this::toggleTraces),
 					new Button(BUTTON_WIDTH, BUTTON_HEIGHT, "Clear Trace", STPanel.this::clearTraces),
 					new Button(BUTTON_WIDTH, BUTTON_HEIGHT, "Toggle Names", STPanel.this::toggleNames));

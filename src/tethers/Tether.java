@@ -1,15 +1,15 @@
 package tethers;
 
-import bodies.Particle;
+import bodies.Body;
 import forces.Force;
 import graphics.GraphicsInterface;
 
 public abstract class Tether implements Force {
 	
 	protected double length;
-	protected Particle p1, p2;
+	protected Body p1, p2;
 	
-	public void fasten(Particle p1, Particle p2) {
+	public void fasten(Body p1, Body p2) {
 		if (p1 != null)
 			this.p1 = p1;
 		if (p2 != null)
