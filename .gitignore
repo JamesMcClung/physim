@@ -1,2 +1,7 @@
 /bin/
-/src/vector2
+/.project
+/.classpath
+/.DS_Store
+
+# Things I might add later, but are not currently complete or integrated:
+/src/vector2/
