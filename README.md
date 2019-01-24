@@ -1,4 +1,5 @@
-# physics-sim
+# physim
+by James McClung
 
 ## Solar System
 The natural first system I ever simulated to scale, and one of the simplest, the solar system only requires Newtonian gravity to simulate at this level of detail.
